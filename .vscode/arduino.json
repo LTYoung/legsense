@@ -1,0 +1,6 @@
+{
+    "board": "arduino:mbed_nano:nanorp2040connect",
+    "programmer": "cmsis-dap",
+    "port": "COM3",
+    "sketch": "legsense.ino"
+}
