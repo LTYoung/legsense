@@ -2,5 +2,6 @@
     "board": "arduino:mbed_nano:nanorp2040connect",
     "programmer": "cmsis-dap",
     "port": "/dev/ttyACM0",
-    "sketch": "legsense.ino"
+    "sketch": "legsense.ino",
+    "output": "build"
 }
