@@ -35,6 +35,7 @@
 elf2uf2/
 generated/
 pico-sdk
+build
 
 # CMake
 CMakeFiles/
@@ -43,4 +44,4 @@ CMakeCache.txt
 Makefile
 
 # VS Code Config
-.vscode/c_cpp_properties.json
+.vscode/

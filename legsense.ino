@@ -46,7 +46,8 @@ void setup()
     Serial.println();
 #endif // DEBUG
 
-    filter.begin(25);
+    filter.begin(IMU.gyroscopeSampleRate());
+    delay(100000);
 }
 
 void loop()
