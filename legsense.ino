@@ -19,10 +19,15 @@
 #include <MadgwickAHRS.h>
 #include "legsense.h"
 
-// Global variables
+/* global variables */
 imu_data_t imu_data;
 
 Madgwick filter;
+
+int rate;   // sample rate in Hz
+unsigned long microsPerReading, microsPrevious;
+
+/* implementation */
 
 void setup()
 {
@@ -44,11 +49,28 @@ void setup()
     printlns("Hz");
     printlns();
 
-    filter.begin(IMU.gyroscopeSampleRate());
-    delay(100000);
+    rate = max(IMU.gyroscopeSampleRate(), IMU.accelerationSampleRate())
+
+    filter.begin(rate);
+
+    microsPerReading = 1000000 / rate;
+    microsPrevious = micros();
 }
 
 void loop()
+{
+    unsigned long microsNow;
+
+    microsNow = micros();
+    if (microsNow - microsPrevious >= microsPerReading)
+    {
+        read_sensors();
+        microsPrevious = microsNow + microsPerReading;
+    }
+}
+
+
+void read_sensors()
 {
     if (IMU.accelerationAvailable())
     {
@@ -61,17 +83,11 @@ void loop()
         IMU.readGyroscope(imu_data.Gx, imu_data.Gy, imu_data.Gz);
         print_gyro_data();
     }
-
-    // Filter
     filter.updateIMU(imu_data.Gx, imu_data.Gy, imu_data.Gz, imu_data.Ax, imu_data.Ay, imu_data.Az);
-
     imu_data.roll = filter.getRoll();
     imu_data.pitch = filter.getPitch();
     imu_data.yaw = filter.getYaw();
-
     print_orientation_data();
-
-    delay(500);
 }
 
 void print_accel_data() 

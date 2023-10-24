@@ -56,6 +56,11 @@ typedef struct {
 /* functions */
 
 /**
+ * updates all values in imu_data
+ */
+void read_sensors();
+
+/**
  * prints out accelerometer data if DEBUG is defined
  */
 void print_accel_data();
