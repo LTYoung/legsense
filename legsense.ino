@@ -18,6 +18,7 @@
 #include <Arduino_LSM6DSOX.h>
 #include <MadgwickAHRS.h>
 #include "legsense.h"
+#include "http.h"
 
 /* global variables */
 imu_data_t imu_data;
@@ -49,12 +50,15 @@ void setup()
     printlns("Hz");
     printlns();
 
-    rate = max(IMU.gyroscopeSampleRate(), IMU.accelerationSampleRate())
+    rate = max(IMU.gyroscopeSampleRate(), IMU.accelerationSampleRate());
 
     filter.begin(rate);
 
     microsPerReading = 1000000 / rate;
     microsPrevious = micros();
+
+    // Start AP
+    setAP();
 }
 
 void loop()
@@ -67,6 +71,7 @@ void loop()
         read_sensors();
         microsPrevious = microsNow + microsPerReading;
     }
+    handle_client(imu_data);
 }
 
 
