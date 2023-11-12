@@ -10,7 +10,7 @@
  * Modules      : Arduino_LSM6DSOX, MadgwickAHRS
  * 
  * Created on   : 10/11/2023
- * Updated on   : 10/24/2023
+ * Updated on   : 11/12/2023
  * Changelist   :
  */
 
@@ -33,9 +33,21 @@ unsigned long microsPerReading, microsPrevious;
 void setup()
 {
     Serial.begin(115200);
+
+    // Set up LEDs
+    pinMode(LEDR, OUTPUT);
+    pinMode(LEDG, OUTPUT);
+    pinMode(LEDB, OUTPUT);
+    digitalWrite(LEDR, HIGH);
+    digitalWrite(LEDG, HIGH);
+    digitalWrite(LEDB, HIGH);
+
+    // Set up IMU
+    delay(10);
+    printlns("LegSense v0.1");
     if (!IMU.begin())
     {
-        Serial.println("Failed to initialize IMU!");
+        printlns("Failed to initialize IMU!");
         while (1)
             ;
     }
@@ -50,15 +62,15 @@ void setup()
     printlns("Hz");
     printlns();
 
-    rate = max(IMU.gyroscopeSampleRate(), IMU.accelerationSampleRate());
+    rate = min(IMU.gyroscopeSampleRate(), IMU.accelerationSampleRate());
+
+    // Start AP
+    setAP();
 
     filter.begin(rate);
 
     microsPerReading = 1000000 / rate;
     microsPrevious = micros();
-
-    // Start AP
-    setAP();
 }
 
 void loop()
@@ -66,12 +78,14 @@ void loop()
     unsigned long microsNow;
 
     microsNow = micros();
-    if (microsNow - microsPrevious >= microsPerReading)
-    {
+    if (microsNow - microsPrevious >= microsPerReading) {
         read_sensors();
         microsPrevious = microsNow + microsPerReading;
+        print_orientation_data();
+        set_led();
+        handle_client(imu_data);
     }
-    handle_client(imu_data);
+    delay(1);
 }
 
 
@@ -79,7 +93,7 @@ void read_sensors()
 {
     if (IMU.accelerationAvailable())
     {
-        IMU.readAcceleration(imu_data.Ax, imu_data.Ax, imu_data.Ax);
+        IMU.readAcceleration(imu_data.Ax, imu_data.Ay, imu_data.Az);
         print_accel_data();
     }
 
@@ -92,7 +106,6 @@ void read_sensors()
     imu_data.roll = filter.getRoll();
     imu_data.pitch = filter.getPitch();
     imu_data.yaw = filter.getYaw();
-    print_orientation_data();
 }
 
 void print_accel_data() 
@@ -123,11 +136,30 @@ void print_gyro_data()
 
 void print_orientation_data()
 {
+#ifndef FILTER_ONLY
     printlns("Orientation data: ");
+#endif // FILTER_ONLY
     prints(imu_data.roll);
     prints('\t');
     prints(imu_data.pitch);
     prints('\t');
     prints(imu_data.yaw);
     printlns();
+}
+
+void set_led()
+{
+    if (abs(imu_data.pitch) < 20) {
+        digitalWrite(LEDR, HIGH);
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDB, LOW);
+    } else if (abs(imu_data.pitch) < 40) {
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, HIGH);
+        digitalWrite(LEDB, LOW);
+    } else {
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDB, HIGH);
+    }
 }

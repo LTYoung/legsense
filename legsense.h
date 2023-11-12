@@ -6,7 +6,7 @@
  * Purpose      : Measures angle of leg lift using an IMU
  * 
  * Created on   : 10/16/2023
- * Updated on   : 10/24/2023
+ * Updated on   : 11/12/2023
  * Changelist   :
  */
 
@@ -24,12 +24,12 @@
 // print safe
 #ifdef DEBUG
 #define printlns(s) ( Serial.println(s) )
-#define prints(s) ( Serial.print(s) )
-#define prinths(s) ( Serial.print(s, HEX) )
+#define prints(s)   ( Serial.print(s) )
+#define prinths(s)  ( Serial.print(s, HEX) )
 #else
 #define printlns(s) (0)
-#define prints(s) (0)
-#define prinths(s) (0)
+#define prints(s)   (0)
+#define prinths(s)  (0)
 #endif //DEBUG
 
 /* types */
@@ -74,5 +74,10 @@ void print_gyro_data();
  * prints out orientation data
  */
 void print_orientation_data();
+
+/**
+ * set LED based on orientation
+ */
+void set_led();
 
 #endif // LEGSENSE_H
