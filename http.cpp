@@ -8,11 +8,42 @@ WiFiServer server(80);
 
 int status = WL_IDLE_STATUS;
 
-
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <title>IMU Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    p {
+      font-size: 1.2em;
+    }
+    #data-container {
+      margin-top: 50px;
+    }
+    .data-field {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 20px auto;
+      width: 300px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .data-field span {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+  </style>
   <script>
     function fetchData() {
         var xhttp = new XMLHttpRequest();
@@ -37,10 +68,10 @@ const char index_html[] PROGMEM = R"rawliteral(
   </script>
 </head>
 <body>
-  <h1>IMU Data</h1>
-  <p>Accelerometer X: <span id="accelX"></span></p>
-  <p>Accelerometer Y: <span id="accelY"></span></p>
-  <p>Accelerometer Z: <span id="accelZ"></span></p>
+    <h1>IMU Data</h1>
+    <p>Accelerometer X: <span id="accelX"></span></p>
+    <p>Accelerometer Y: <span id="accelY"></span></p>
+    <p>Accelerometer Z: <span id="accelZ"></span></p>
     <p>Gyroscope X: <span id="gyroX"></span></p>
     <p>Gyroscope Y: <span id="gyroY"></span></p>
     <p>Gyroscope Z: <span id="gyroZ"></span></p>
@@ -50,7 +81,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 </body>
 </html>
 )rawliteral";
-
 
 // Starts the WiFi AP for a client to connect to
 // and starts the HTTP server once AP is up
