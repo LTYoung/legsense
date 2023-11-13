@@ -8,6 +8,50 @@ WiFiServer server(80);
 
 int status = WL_IDLE_STATUS;
 
+
+const char index_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <title>IMU Data</title>
+  <script>
+    function fetchData() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = JSON.parse(this.responseText);
+                document.getElementById("accelX").innerText = data.accelX;
+                document.getElementById("accelY").innerText = data.accelY;
+                document.getElementById("accelZ").innerText = data.accelZ;
+                document.getElementById("gyroX").innerText = data.gyroX;
+                document.getElementById("gyroY").innerText = data.gyroY;
+                document.getElementById("gyroZ").innerText = data.gyroZ;
+                document.getElementById("roll").innerText = data.roll;
+                document.getElementById("pitch").innerText = data.pitch;
+                document.getElementById("yaw").innerText = data.yaw;
+            }
+        };
+        xhttp.open("GET", "/data", true);
+        xhttp.send();
+    }
+    setInterval(fetchData, 1000);
+  </script>
+</head>
+<body>
+  <h1>IMU Data</h1>
+  <p>Accelerometer X: <span id="accelX"></span></p>
+  <p>Accelerometer Y: <span id="accelY"></span></p>
+  <p>Accelerometer Z: <span id="accelZ"></span></p>
+    <p>Gyroscope X: <span id="gyroX"></span></p>
+    <p>Gyroscope Y: <span id="gyroY"></span></p>
+    <p>Gyroscope Z: <span id="gyroZ"></span></p>
+    <p>Roll: <span id="roll"></span></p>
+    <p>Pitch: <span id="pitch"></span></p>
+    <p>Yaw: <span id="yaw"></span></p>
+</body>
+</html>
+)rawliteral";
+
+
 // Starts the WiFi AP for a client to connect to
 // and starts the HTTP server once AP is up
 void setAP()
@@ -34,64 +78,69 @@ void setAP()
     server.begin();
 }
 
-
-
 // handle_client()
 // handles client requests
 // and prints the IMU data to the client
 // on every get request
 
-void handle_client(imu_data_t imu_data){
+void handle_client(imu_data_t imu_data)
+{
     WiFiClient client = server.available();
     // if there is a client connected
-    if (client){
+    if (client)
+    {
         Serial.println("[*] Client connected");
         // wait for the client to send data
-        while (client.connected()){
+        while (client.connected())
+        {
             // if there is data available
-            if (client.available()){
+            if (client.available())
+            {
                 // read the data
                 String req = client.readStringUntil('\r');
                 Serial.println(req);
                 client.flush();
-                // if the request is a GET request
-                if (req.indexOf("GET") != -1){
-                    // send the IMU data
+
+                if (req.indexOf("GET / ") != -1)
+                {
                     client.println("HTTP/1.1 200 OK");
                     client.println("Content-Type: text/html");
                     client.println("Connection: close");
                     client.println();
-                    client.println("<!DOCTYPE HTML>");
-                    client.println("<html>");
-                    client.println("<head>");
-                    client.println("<title>LegSense</title>");
-                    client.println("</head>");
-                    client.println("<body>");
-                    client.println("<h1>LegSense</h1>");
-                    client.println("<p>Accelerometer Data</p>");
-                    client.println("<p>Roll: " + String(imu_data.roll) + "</p>");
-                    client.println("<p>Pitch: " + String(imu_data.pitch) + "</p>");
-                    client.println("<p>Yaw: " + String(imu_data.yaw) + "</p>");
-                    client.println("<p> Gyroscope Data </p>");
-                    client.println("<p>Gx: " + String(imu_data.Gx) + "</p>");
-                    client.println("<p>Gy: " + String(imu_data.Gy) + "</p>");
-                    client.println("<p>Gz: " + String(imu_data.Gz) + "</p>");
-                    client.println("<p> Raw Accelerometer Data </p>");
-                    client.println("<p>Ax: " + String(imu_data.Ax) + "</p>");
-                    client.println("<p>Ay: " + String(imu_data.Ay) + "</p>");
-                    client.println("<p>Az: " + String(imu_data.Az) + "</p>");
-                    //client.println("Updated on " + String(day()) + "/" + String(month()) + "/" + String(year()) + " at " + String(hour()) + ":" + String(minute()) + ":" + String(second()));
-                    client.println("</body>");
-                    client.println("</html>");
-                    break;
+                    client.println(index_html); // Send the HTML content
+                }
+
+                // if the request is a GET request for the /data endpoint
+                if (req.indexOf("GET /data") != -1)
+                {
+                    // send the IMU data
+                    client.println("HTTP/1.1 200 OK");
+                    client.println("Content-Type: application/json");
+                    client.println("Connection: close");
+                    client.println();
+
+                    // Send the IMU data in JSON format
+                    client.print("{\"accelX\":");
+                    client.print(imu_data.Ax);
+                    client.print(",\"accelY\":");
+                    client.print(imu_data.Ay);
+                    client.print(",\"accelZ\":");
+                    client.print(imu_data.Az);
+                    client.print(",\"gyroX\":");
+                    client.print(imu_data.Gx);
+                    client.print(",\"gyroY\":");
+                    client.print(imu_data.Gy);
+                    client.print(",\"gyroZ\":");
+                    client.print(imu_data.Gz);
+                    client.print(",\"roll\":");
+                    client.print(imu_data.roll);
+                    client.print(",\"pitch\":");
+                    client.print(imu_data.pitch);
+                    client.print(",\"yaw\":");
+                    client.print(imu_data.yaw);
+                    client.println("}");
                 }
             }
         }
-        // close the connection
-        client.stop();
-        Serial.println("[*] Client disconnected");
-    }
-    else {
-        Serial.println("[*] No client connected");
     }
 }
