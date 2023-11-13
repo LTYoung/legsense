@@ -19,6 +19,7 @@
 #include <MadgwickAHRS.h>
 #include "legsense.h"
 #include "http.h"
+#include "ble.h"
 
 /* global variables */
 imu_data_t imu_data;
@@ -64,8 +65,12 @@ void setup()
 
     rate = min(IMU.gyroscopeSampleRate(), IMU.accelerationSampleRate());
 
-    // Start AP
+    // Connectivity
+    // Wi-Fi AP and HTTP server
     setAP();
+    // BLE
+    bleSetup();
+
 
     filter.begin(rate);
 
@@ -84,6 +89,7 @@ void loop()
         print_orientation_data();
         set_led();
         handle_client(imu_data);
+        bleNotify(imu_data);
     }
     delay(1);
 }
