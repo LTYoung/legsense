@@ -87,11 +87,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 void setAP()
 {
     Serial.println("\n[*] Creating AP");
-    pinMode(LEDR, OUTPUT);
-    pinMode(LEDG, OUTPUT);
-    pinMode(LEDB, OUTPUT);
-    digitalWrite(LEDG, LOW);  // turn off gree LED
-    digitalWrite(LEDB, HIGH); // blue means setup mode
     status = WiFi.beginAP(ssid, pass);
     if (status != WL_AP_LISTENING)
     {
