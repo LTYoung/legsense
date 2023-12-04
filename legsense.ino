@@ -10,8 +10,9 @@
  * Modules      : Arduino_LSM6DSOX, MadgwickAHRS
  * 
  * Created on   : 10/11/2023
- * Updated on   : 11/12/2023
- * Changelist   :
+ * Updated on   : 11/29/2023
+ * Changelist   : 
+ *      BLE is disabled for now
  */
 
 // Dependencies
@@ -19,15 +20,17 @@
 #include <MadgwickAHRS.h>
 #include "legsense.h"
 #include "http.h"
-#include "ble.h"
+// #include "ble.h"
 
 /* global variables */
 imu_data_t imu_data;
 
 Madgwick filter;
+// Ticker tick;
 
 int rate;   // sample rate in Hz
 unsigned long microsPerReading, microsPrevious;
+float bound_high, bound_low, bound_center;
 
 /* implementation */
 
@@ -65,11 +68,16 @@ void setup()
 
     rate = min(IMU.gyroscopeSampleRate(), IMU.accelerationSampleRate());
 
+    // set bounds
+    bound_low = DEFAULT_BOUND_LOW;
+    bound_high = DEFAULT_BOUND_HIGH;
+    bound_center = (bound_low + bound_high) / 2; // default 3x degrees
+
     // Connectivity
     // Wi-Fi AP and HTTP server
     setAP();
     // BLE
-    bleSetup();
+    // bleSetup();
 
 
     filter.begin(rate);
@@ -81,15 +89,17 @@ void setup()
 void loop()
 {
     unsigned long microsNow;
+    rating_t rating = RATING_NONE;
 
     microsNow = micros();
     if (microsNow - microsPrevious >= microsPerReading) {
         read_sensors();
         microsPrevious = microsNow + microsPerReading;
+        // if in good range
         print_orientation_data();
         set_led();
         handle_client(imu_data);
-        bleNotify(imu_data);
+        // bleNotify(imu_data);
     }
     delay(1);
 }
@@ -112,6 +122,18 @@ void read_sensors()
     imu_data.roll = filter.getRoll();
     imu_data.pitch = filter.getPitch();
     imu_data.yaw = filter.getYaw();
+}
+
+rating_t get_rating()
+{
+    float angle = abs(imu_data.pitch);
+    if ( angle < bound_low ) {
+        return RATING_BAD_ANGLE_LOW;
+    } else if ( angle > bound_high ) {
+        return RATING_BAD_ANGLE_HIGH;
+    } else {
+        return RATING_GOOD_GENERIC;
+    }
 }
 
 void print_accel_data() 
@@ -155,17 +177,17 @@ void print_orientation_data()
 
 void set_led()
 {
-    if (abs(imu_data.pitch) < 20) {
+    if ( imu_data.pitch < bound_low ) {
         digitalWrite(LEDR, HIGH);
         digitalWrite(LEDG, LOW);
         digitalWrite(LEDB, LOW);
-    } else if (abs(imu_data.pitch) < 40) {
-        digitalWrite(LEDR, LOW);
-        digitalWrite(LEDG, HIGH);
-        digitalWrite(LEDB, LOW);
-    } else {
+    } else if ( imu_data.pitch > bound_high ) {
         digitalWrite(LEDR, LOW);
         digitalWrite(LEDG, LOW);
         digitalWrite(LEDB, HIGH);
+    } else {
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, HIGH);
+        digitalWrite(LEDB, LOW);
     }
 }
