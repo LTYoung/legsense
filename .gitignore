@@ -30,3 +30,18 @@
 *.exe
 *.out
 *.app
+
+# generated directories
+elf2uf2/
+generated/
+pico-sdk
+build
+
+# CMake
+CMakeFiles/
+cmake_*
+CMakeCache.txt
+Makefile
+
+# VS Code
+c_cpp_properties.json
